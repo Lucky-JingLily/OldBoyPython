@@ -1,0 +1,71 @@
+{% load my_tag %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        .page-header {
+            height: 50px;
+            background-color: rebeccapurple;
+        }
+
+        .page-body .menu {
+            height: 500px;
+            background-color: antiquewhite;
+            float: left;
+            width: 20%;
+        }
+
+        .page-body .content {
+            height: 500px;
+            background-color: cornflowerblue;
+            float: left;
+            width: 80%;
+        }
+
+        .page-footer {
+            height: 50px;
+            background-color: darkcyan;
+            clear: both;
+        }
+    </style>
+</head>
+<body>
+<h1>template</h1>
+{#模板语言没有[],都用.代替#}
+{#{{ obj.username }}#}
+{##}
+{#{% if False %}#}
+{#    <p>hello world</p>#}
+{#{% elif obj %}#}
+{#    <p>hello {{ obj.username }}</p>#}
+{#{% endif %}#}
+{##}
+{#{% for item in obj %}#}
+{#    <p>{{ forloop.counter }}:{{ item }}</p>#}
+{#    <p>{{ forloop.counter0 }}:{{ item }}</p>#}
+{#    <p>{{ forloop.revcounter }}:{{ item }}</p>#}
+{#{% endfor %}#}
+{##}
+{#{{ obj | upper }}#}
+{##}
+{#{{ obj | safe }}#}
+
+{#{% my_add100_tag 4 %}#}
+{#{{ num | my_add100_filter:30 }}#}
+
+<div>
+    <div class="page-header"></div>
+    <div class="page-body">
+        <div class="menu">
+            <a href="">订单</a><br />
+            <a href="">购物车</a>
+        </div>
+        <div class="content"></div>
+    </div>
+    <div class="page-footer"></div>
+</div>
+</body>
+</html>
