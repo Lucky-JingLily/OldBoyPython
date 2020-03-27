@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'blog.apps.BlogConfig',
+    "rest_framework"
     # "blog",
 ]
 
@@ -124,16 +125,36 @@ LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'handlers': {
-        'console':{
-            'level':'DEBUG',
-            'class':'logging.StreamHandler',
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
         },
     },
     'loggers': {
         'django.db.backends': {
             'handlers': ['console'],
             'propagate': True,
-            'level':'DEBUG',
+            'level': 'DEBUG',
         },
     }
+}
+
+REST_FRAMEWORK = {
+    # 自定义修改drf的配置们
+    # 'DEFAULT_PERMISSION_CLASSES': ['blog.utils.permissions.SVIPPermission'],
+    'DEFAULT_THROTTLE_RATES': {
+        # 对游客的限制每分钟3次
+        'Vistor': '3/m',
+        # 对登陆用户的限制每分钟10次
+        'User': '10/m'
+    },
+    # 全局应用
+    'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.URLPathVersioning',
+    # 如果没有传版本，可以使用默认版本
+    "DEFAULT_VERSION": 'v1',
+    # 允许出现的版本
+    "ALLOWED_VERSION": ['v1', 'v2'],
+    # 设置url中获取版本的变量，默认是version
+    "VERSION_PARAM": 'version',
+    "DEFAULT_PARSER_CLASSES": ["rest_framework.parsers.JSONParser", "rest_framework.parsers.FormParser"],
 }

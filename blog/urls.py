@@ -17,4 +17,12 @@ urlpatterns = [
 
     # url别名
     url(r'func_alias', views.func_alias, name="alias"),
+    path("users", views.UserView.as_view()),
+
+    re_path(r'^(?P<version>[v1|v2]+)/users/$', views.UserView.as_view()),
+    re_path(r'^(?P<version>[v1|v2]+)/parserview/$', views.ParserView.as_view()),
+    re_path(r'^(?P<version>[v1|v2]+)/userinfos/$', views.UserInfoView.as_view()),
+    re_path('^(?P<version>[v1|v2]+)/usergroup/(?P<group>\d+)', views.UserInfoView.as_view(),name='gp'),
+    re_path('^(?P<version>[v1|v2]+)/usergroup/(\d+)', views.GroupView.as_view()),
+
 ]

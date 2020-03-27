@@ -1,14 +1,28 @@
+import json
+
 from django.db.models import Avg, Sum, Min, F, Q
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
+from django.views import View
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
+from django.utils.decorators import method_decorator
+from blog.utils.authentication import UserAuthentication, MyAuthentication, BaseAuthentication
+from rest_framework.versioning import QueryParameterVersioning, URLPathVersioning
+from rest_framework.permissions import BasePermission
+from rest_framework.parsers import JSONParser, FormParser
 
 # Create your views here.
 from django.urls import reverse
+from rest_framework.views import APIView
 
 from blog import models
 
 # userList = []
 from blog.models import Book
+from blog.utils.permissions import LoginPermission
+from blog.utils.throttling import UserThrottle, VistorThrottling
+from blog.utils.version import ParamVersion
+from blog.utils.serializers import UserInfoSerializer
 
 
 def user_info(req):
@@ -18,16 +32,15 @@ def user_info(req):
         email = req.POST.get("email", None)
 
         user = {"username": username, "sex": sex, "email": email}
-        print(user)
 
-        models.UserInfo.objects.create(
+        models.User.objects.create(
             username=username,
             sex=sex,
             email=email,
         )
 
         # userList.append(user)
-    user_list = models.UserInfo.objects.all()
+    user_list = models.User.objects.all()
 
     # return render(req, "index.html", {"useList": user_list})
     # 需要本地变量的名字与待渲染的html页面{% 变量 %}变量名一致
@@ -121,3 +134,144 @@ def data_ops(req):
     models.Book.objects.filter(Q(id=3) | Q(title="GO"))
 
     return HttpResponse("OK")
+
+
+@method_decorator(csrf_exempt, "dispatch")
+class BaseView(View):
+    def dispatch(self, request, *args, **kwargs):
+        print("before")
+        return super(BaseView, self).dispatch(request, *args, **kwargs)
+
+
+class Students(BaseView):
+    def get(self, request, *args, **kwargs):
+        return HttpResponse("GET")
+
+    def post(self, request, *args, **kwargs):
+        return HttpResponse("POST")
+
+    def put(self, request, *args, **kwargs):
+        return HttpResponse("PUT")
+
+    def delete(self, request, *args, **kwargs):
+        return HttpResponse("DELETE")
+
+
+class Teachers(BaseView):
+    def get(self, request, *args, **kwargs):
+        return HttpResponse("GET")
+
+    def post(self, request, *args, **kwargs):
+        return HttpResponse("POST")
+
+    def put(self, request, *args, **kwargs):
+        return HttpResponse("PUT")
+
+    def delete(self, request, *args, **kwargs):
+        return HttpResponse("DELETE")
+
+
+class OrdersView(APIView):
+    authentication_classes = [MyAuthentication, ]
+
+    def get(self, request, *args, **kwargs):
+        self.dispatch
+        return HttpResponse("GET")
+
+    def post(self, request, *args, **kwargs):
+        return HttpResponse("POST")
+
+    def put(self, request, *args, **kwargs):
+        return HttpResponse("PUT")
+
+    def delete(self, request, *args, **kwargs):
+        return HttpResponse("DELETE")
+
+
+def md5(user):
+    import hashlib
+    import time
+    ctime = str(time.ctime())
+    m = hashlib.md5(bytes(user, encoding="utf-8"))
+    m.update(bytes(ctime, encoding="utf-8"))
+    return m.hexdigest()
+
+
+class AuthView(APIView):
+    permission_classes = [LoginPermission, ]
+
+    def post(self, request, *args, **kwargs):
+        ret = {"code": 1000, "msg": None}
+        try:
+            user = request._request.POST.get("username")
+            passwd = request._request.POST.get("password")
+
+            obj = models.UserInfo.objects.filter(username=user, password=passwd).first()
+            if not obj:
+                ret["code"] = 1001
+                ret["msg"] = "用户名密码错误"
+            token = md5(user)
+            models.UserToken.objects.update_or_create(user=obj, defaults={"token": token})
+            ret["token"] = token
+            ret["msg"] = "login success."
+        except Exception as e:
+            print(e)
+        return JsonResponse(ret)
+
+
+class UserView(APIView):
+    authentication_classes = [UserAuthentication, ]
+    throttle_classes = [UserThrottle, ]
+    # versioning_class = ParamVersion
+    # versioning_class = QueryParameterVersioning
+    versioning_class = URLPathVersioning
+
+    def get(self, request, *args, **kwargs):
+        # self.dispatch()
+        print(request.version)
+        ret = {"code": 1000, "msg": None}
+        return JsonResponse({"code": 1000, "msg": request.user.username})
+
+class UserInfoView(APIView):
+    authentication_classes = [MyAuthentication, ]
+    # throttle_classes = [UserThrottle, ]
+    throttle_classes = []
+    # versioning_class = ParamVersion
+    # versioning_class = QueryParameterVersioning
+    versioning_class = URLPathVersioning
+
+    def get(self, request, *args, **kwargs):
+        # self.dispatch()
+
+        users = models.UserInfo.objects.all()
+        # ser = UserInfoSerializer(instance=users, many=True)
+        ser = UserInfoSerializer(instance=users, many=True, context={'request': request})
+
+        ret = json.dumps(ser.data, ensure_ascii=False)
+        return HttpResponse(ret)
+
+class GroupView(APIView):
+    authentication_classes = [MyAuthentication, ]
+    # throttle_classes = [UserThrottle, ]
+    throttle_classes = []
+    # versioning_class = ParamVersion
+    # versioning_class = QueryParameterVersioning
+    versioning_class = URLPathVersioning
+
+    def get(self, request, *args, **kwargs):
+        # self.dispatch()
+
+        group = models.UserGroup.objects.all()
+        # ser = UserInfoSerializer(instance=users, many=True)
+        ser = UserInfoSerializer(instance=group, many=False)
+
+        ret = json.dumps(ser.data, ensure_ascii=False)
+        return HttpResponse(ret)
+
+
+class ParserView(APIView):
+    permission_classes = [LoginPermission, ]
+
+    def post(self, request, *args, **kwargs):
+        print(request.data)
+        return HttpResponse("JSON测试")

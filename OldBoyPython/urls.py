@@ -42,5 +42,13 @@ urlpatterns = [
     # url(r'^func_alias', views.func_alias, name="alias"),
 
     path("ordered", views.ordered),
-    path("shopping_car", views.shopping_car)
+    path("shopping_car", views.shopping_car),
+
+    path("students", views.Students.as_view()),
+    path("teachers", views.Teachers.as_view()),
+
+    path("orders", views.OrdersView.as_view()),
+
+    path("api/v1/auth", views.AuthView.as_view()),
+    path("api/v1/user", views.UserView.as_view()),
 ]
